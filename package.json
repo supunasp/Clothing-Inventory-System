@@ -1,7 +1,7 @@
 {
-  "name": "task-manager",
+  "name": "clothing-inventory-system",
   "version": "1.0.0",
-  "description": "Complete MERN Task Manager Application",
+  "description": "Complete MERN Clothing Inventory System Application",
   "scripts": {
     "install-all": "npm install && npm install --prefix backend && npm install --prefix frontend",
     "start": "concurrently \"npm run prod --prefix backend\" \"npm start --prefix frontend\"",
@@ -10,7 +10,7 @@
   "devDependencies": {
     "chai": "^5.1.2",
     "concurrently": "^7.0.0",
-    "mocha": "^11.0.1"
+    "mocha": "^7.2.0"
   },
   "author": "Task Manager Team",
   "license": "ISC"
