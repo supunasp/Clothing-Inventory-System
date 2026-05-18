@@ -1,148 +1,78 @@
-const ProductCategory = require('../models/ProductCategory');
+const productCategoryService = require('../services/productCategoryService');
 
-// Create a new product category
 const createCategory = async (req, res) => {
     try {
-        const {categoryId, categoryName} = req.body;
-
-        if (!categoryId || !categoryName) {
-            return res.status(400).json({
-                message: 'categoryId and categoryName are required',
-            });
-        }
-
-        const existingCategory = await ProductCategory.findOne({categoryId});
-
-        if (existingCategory) {
-            return res.status(409).json({
-                message: 'ProductCategory with this categoryId already exists',
-            });
-        }
-
-        const category = await ProductCategory.create({
-            categoryId,
-            categoryName,
-        });
+        const category = await productCategoryService.createCategory(req.body);
 
         return res.status(201).json({
             message: 'ProductCategory created successfully',
-            category,
+            category: convertToCategoryResponse(category),
         });
     } catch (error) {
-        return res.status(500).json({
-            message: 'Error creating category',
-            error: error.message,
-        });
+        return handleControllerError(res, error, 'Error creating category');
     }
 };
 
-// Get all categories
 const getCategories = async (req, res) => {
     try {
-        const categories = await ProductCategory.find().sort({createdAt: -1});
+        const categories = await productCategoryService.getCategories();
 
-        return res.status(200).json(categories);
+        return res.status(200).json(categories.map(convertToCategoryResponse));
     } catch (error) {
-        return res.status(500).json({
-            message: 'Error fetching categories',
-            error: error.message,
-        });
+        return handleControllerError(res, error, 'Error fetching categories');
     }
 };
 
-// Get a single category by categoryId
 const getCategoryById = async (req, res) => {
     try {
-        const {categoryId} = req.params;
+        const category = await productCategoryService.getCategoryById(req.params.categoryId);
 
-        const category = await ProductCategory.findOne({categoryId});
-
-        if (!category) {
-            return res.status(404).json({
-                message: 'ProductCategory not found',
-            });
-        }
-
-        return res.status(200).json(convertToResponse(category));
+        return res.status(200).json(convertToCategoryResponse(category));
     } catch (error) {
-        return res.status(500).json({
-            message: 'Error fetching category',
-            error: error.message,
-        });
+        return handleControllerError(res, error, 'Error fetching category');
     }
 };
 
-// Update category by categoryId
 const updateCategory = async (req, res) => {
     try {
-        const {categoryId} = req.params;
-        const {categoryName} = req.body;
-
-        if (!categoryName) {
-            return res.status(400).json({
-                message: 'categoryName is required',
-            });
-        }
-
-        const updatedCategory = await ProductCategory.findOneAndUpdate(
-            {categoryId},
-            {categoryName},
-            {
-                new: true,
-                runValidators: true,
-            }
+        const category = await productCategoryService.updateCategory(
+            req.params.categoryId,
+            req.body
         );
-
-        if (!updatedCategory) {
-            return res.status(404).json({
-                message: 'ProductCategory not found',
-            });
-        }
 
         return res.status(200).json({
             message: 'ProductCategory updated successfully',
-            category: convertToResponse(updatedCategory),
+            category: convertToCategoryResponse(category),
         });
     } catch (error) {
-        return res.status(500).json({
-            message: 'Error updating category',
-            error: error.message,
-        });
+        return handleControllerError(res, error, 'Error updating category');
     }
 };
 
-// Delete category by categoryId
 const deleteCategory = async (req, res) => {
     try {
-        const {categoryId} = req.params;
-
-        const deletedCategory = await ProductCategory.findOneAndDelete({categoryId});
-
-        if (!deletedCategory) {
-            return res.status(404).json({
-                message: 'ProductCategory not found',
-            });
-        }
+        const category = await productCategoryService.deleteCategory(req.params.categoryId);
 
         return res.status(200).json({
             message: 'ProductCategory deleted successfully',
-            category: convertToResponse(deletedCategory),
+            category: convertToCategoryResponse(category),
         });
     } catch (error) {
-        return res.status(500).json({
-            message: 'Error deleting category',
-            error: error.message,
-        });
+        return handleControllerError(res, error, 'Error deleting category');
     }
 };
 
-function convertToResponse(category) {
-    return {
-        id: category.id,
-        categoryId: category.categoryId,
-        name: category.name,
-    };
-}
+const convertToCategoryResponse = (category) => ({
+    categoryId: category.categoryId,
+    categoryName: category.categoryName,
+});
+
+const handleControllerError = (res, error, fallbackMessage) => {
+    return res.status(error.statusCode || 500).json({
+        message: error.statusCode ? error.message : fallbackMessage,
+        error: error.message,
+    });
+};
 
 module.exports = {
     createCategory,
@@ -150,4 +80,5 @@ module.exports = {
     getCategoryById,
     updateCategory,
     deleteCategory,
+    convertToCategoryResponse,
 };
