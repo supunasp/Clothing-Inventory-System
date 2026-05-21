@@ -110,10 +110,23 @@ const deleteProduct = async (productId) => {
     return deletedProduct;
 };
 
+const findProductDocumentByProductId = async (productId) => {
+    const product = await Product.findOne({productId: productId});
+
+    if (!product) {
+        const error = new Error('Product not found');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    return product;
+};
+
 module.exports = {
     createProduct,
     getProducts,
     getProductById,
     updateProduct,
     deleteProduct,
+    findProductDocumentByProductId,
 };
