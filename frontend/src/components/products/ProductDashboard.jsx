@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 const products = [
@@ -43,6 +44,7 @@ const products = [
 
 const ProductDashboard = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [selectedProduct, setSelectedProduct] = useState(null);
 
     const fullName =
@@ -77,7 +79,10 @@ const ProductDashboard = () => {
                         </label>
                     </div>
 
-                    <button className="rounded-md bg-emerald-600 px-4 py-2 text-xs font-medium text-white hover:bg-emerald-700">
+                    <button
+                        onClick={() => navigate("/products/create")}
+                        className="rounded-md bg-emerald-600 px-4 py-2 text-xs font-medium text-white hover:bg-emerald-700"
+                    >
                         + Add Product
                     </button>
                 </div>
