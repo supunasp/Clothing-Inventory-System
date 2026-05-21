@@ -18,7 +18,7 @@ const registerUser = async (req, res) => {
                 active: true,
                 role: ROLE_STAFF
             });
-        res.status(201).json(convertToResponse(user));
+        res.status(201).json(convertToUserResponse(user));
     } catch (error) {
         res.status(500).json({message: error.message});
     }
@@ -29,7 +29,7 @@ const loginUser = async (req, res) => {
     try {
         const user = await User.findOne({email});
         if (user && (await bcrypt.compare(password, user.password))) {
-            res.json(convertToResponse(user));
+            res.json(convertToUserResponse(user));
         } else {
             res.status(401).json({message: 'Invalid email or password'});
         }
@@ -45,7 +45,7 @@ const getProfile = async (req, res) => {
             return res.status(404).json({message: 'User not found'});
         }
 
-        res.status(200).json(convertToResponse(user));
+        res.status(200).json(convertToUserResponse(user));
     } catch (error) {
         res.status(500).json({message: 'Server error', error: error.message});
     }
@@ -64,23 +64,21 @@ const updateUserProfile = async (req, res) => {
         user.role = role || user.role;
 
         const updatedUser = await user.save();
-        res.json(convertToResponse(updatedUser));
+        res.json(convertToUserResponse(updatedUser));
     } catch (error) {
         res.status(500).json({message: error.message});
     }
 };
 
-function convertToResponse(user) {
-    return {
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        active: user.active,
-        role: user.role,
-        token: generateToken(user.id)
-    };
-}
+const convertToUserResponse = (user) => ({
+    id: user.id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    active: user.active,
+    role: user.role,
+    token: generateToken(user.id)
+});
 
 const generateToken = (id) => {
     return jwt.sign({id}, process.env.JWT_SECRET, {expiresIn: '30d'});
