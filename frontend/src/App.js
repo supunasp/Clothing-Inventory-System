@@ -4,6 +4,7 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import LandingPage from './pages/LandingPage';
 import CreateProduct from './components/products/CreateProduct';
+import AddInventory from './components/products/AddInventory';
 import AppLayout from './components/layout/AppLayout';
 import {useAuth} from './context/AuthContext';
 
@@ -62,6 +63,15 @@ function App() {
                     element={
                         <ProtectedLayout>
                             <CreateProduct/>
+                        </ProtectedLayout>
+                    }
+                />
+
+                <Route
+                    path="/inventory/add"
+                    element={
+                        <ProtectedLayout>
+                            <AddInventory/>
                         </ProtectedLayout>
                     }
                 />
