@@ -57,7 +57,7 @@ const AddInventory = () => {
                 product: product._id,
                 color: formData.color,
                 size: formData.size,
-                stockAmount: Number(formData.amount),
+                stockAmount: Number(formData.stockAmount),
                 reference: formData.reference,
             });
 
