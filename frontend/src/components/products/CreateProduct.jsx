@@ -7,11 +7,13 @@ const CreateProduct = () => {
     const navigate = useNavigate();
 
     const [categories, setCategories] = useState([]);
+    const [brands, setBrands] = useState([]);
     const [formData, setFormData] = useState({
         productId: "",
         name: "",
         description: "",
         category: "",
+        brand: "",
     });
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,16 +21,21 @@ const CreateProduct = () => {
     const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
-        const fetchCategories = async () => {
+        const fetchFormOptions = async () => {
             try {
-                const response = await axiosInstance.get("/api/categories");
-                setCategories(response.data.categories || response.data || []);
+                const [categoriesResponse, brandsResponse] = await Promise.all([
+                    axiosInstance.get("/api/categories"),
+                    axiosInstance.get("/api/brands"),
+                ]);
+
+                setCategories(categoriesResponse.data.categories || categoriesResponse.data || []);
+                setBrands(brandsResponse.data.brands || brandsResponse.data || []);
             } catch (error) {
-                setErrorMessage("Unable to load product categories.");
+                setErrorMessage("Unable to load product categories or brands.");
             }
         };
 
-        fetchCategories();
+        fetchFormOptions();
     }, []);
 
     const handleChange = (event) => {
@@ -62,6 +69,7 @@ const CreateProduct = () => {
                 name: "",
                 description: "",
                 category: "",
+                brand: "",
             });
             setIsConfirmOpen(false);
         } catch (error) {
@@ -114,8 +122,8 @@ const CreateProduct = () => {
                             <option value="">Select a category</option>
                             {categories.map((category) => (
                                 <option
-                                    key={category._id}
-                                    value={category._id}
+                                    key={category.categoryId}
+                                    value={category.categoryId}
                                 >
                                     {category.categoryName}
                                 </option>
@@ -127,10 +135,21 @@ const CreateProduct = () => {
                         className="grid grid-cols-1 gap-2 text-xs font-medium text-gray-700 md:grid-cols-[90px_1fr] md:items-center">
                         Brand
                         <select
-                            disabled
-                            className="h-10 rounded-md border border-gray-200 bg-gray-50 px-3 text-xs text-gray-400 outline-none"
+                            name="brand"
+                            value={formData.brand}
+                            onChange={handleChange}
+                            required
+                            className="h-10 rounded-md border border-gray-300 bg-white px-3 text-xs text-gray-700 outline-none focus:border-blue-500"
                         >
-                            <option>Select Brand</option>
+                            <option value="">Select a brand</option>
+                            {brands.map((brand) => (
+                                <option
+                                    key={brand.brandId}
+                                    value={brand.brandId}
+                                >
+                                    {brand.brandName}
+                                </option>
+                            ))}
                         </select>
                     </label>
 
