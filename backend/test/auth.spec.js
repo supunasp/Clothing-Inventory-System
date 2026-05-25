@@ -113,6 +113,22 @@ describe('Auth endpoints', () => {
 
             expect(res).to.have.status(401);
         });
+
+        it('rejects disabled (inactive) users', async () => {
+            await createStaffUser({
+                email: 'disabled@test.com',
+                password: 'password123',
+                active: false,
+            });
+
+            const res = await chai.request(app).post('/api/auth/login').send({
+                email: 'disabled@test.com',
+                password: 'password123',
+            });
+
+            expect(res).to.have.status(403);
+            expect(res.body.message).to.match(/deactivated/i);
+        });
     });
 
     describe('GET /api/auth/profile', () => {
