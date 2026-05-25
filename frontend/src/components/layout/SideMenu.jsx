@@ -1,13 +1,14 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import logo from "../../assets/logo.png";
+import { ROLE_ADMIN } from "../../constants";
 
 const SideMenu = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useAuth();
 
-    const isAdmin = user?.role === "admin";
+    const isAdmin = user?.role === ROLE_ADMIN;
 
     const menuItems = isAdmin
         ? [

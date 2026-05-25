@@ -1,5 +1,6 @@
 import Header from "./Header";
 import SideMenu from "./SideMenu";
+import SessionTimeoutModal from "../common/SessionTimeoutModal";
 
 const AppLayout = ({ children }) => {
     return (
@@ -9,10 +10,10 @@ const AppLayout = ({ children }) => {
             <main className="ml-60 min-h-screen">
                 <Header />
 
-                <div className="px-8 py-5">
-                    {children}
-                </div>
+                <div className="px-8 py-5">{children}</div>
             </main>
+
+            <SessionTimeoutModal />
         </div>
     );
 };

@@ -6,9 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import ConfirmationModal from "../components/common/ConfirmationModal";
 import PageHeader from "../components/common/PageHeader";
 import Pagination from "../components/common/Pagination";
-
-const ROLE_ADMIN = "admin";
-const ROLE_STAFF = "staff";
+import { PAGE_SIZE, ROLE_ADMIN, ROLE_STAFF } from "../constants";
 
 const UserManagement = () => {
     const navigate = useNavigate();
@@ -44,7 +42,7 @@ const UserManagement = () => {
             const response = await axiosInstance.get("/api/admin/users", {
                 params: {
                     page,
-                    limit: 10,
+                    limit: PAGE_SIZE,
                     search: search || undefined,
                     role: role || undefined,
                     active: active || undefined,

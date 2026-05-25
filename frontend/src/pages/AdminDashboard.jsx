@@ -7,6 +7,7 @@ import EntityManagementList from "../components/common/EntityManagementList";
 import Pagination from "../components/common/Pagination";
 import ProductFilters from "../components/common/ProductFilters";
 import useReferenceData from "../hooks/useReferenceData";
+import { PAGE_SIZE } from "../constants";
 
 const StatCard = ({icon, iconBg = "bg-emerald-50", title, value}) => {
     return (
@@ -69,7 +70,7 @@ const AdminDashboard = () => {
             const response = await axiosInstance.get("/api/products", {
                 params: {
                     page: productPage,
-                    limit: 10,
+                    limit: PAGE_SIZE,
                     category: selectedCategory || undefined,
                     brand: selectedBrand || undefined,
                 },

@@ -12,6 +12,7 @@ import UserManagement from "./pages/UserManagement";
 import InventoryAuditList from "./pages/InventoryAuditList";
 import AppLayout from './components/layout/AppLayout';
 import {useAuth} from './context/AuthContext';
+import {ROLE_ADMIN} from './constants';
 
 const ProtectedRoute = ({children, adminOnly = false}) => {
     const {user} = useAuth();
@@ -20,7 +21,7 @@ const ProtectedRoute = ({children, adminOnly = false}) => {
         return <Navigate to="/login" replace/>;
     }
 
-    if (adminOnly && user.role !== 'admin') {
+    if (adminOnly && user.role !== ROLE_ADMIN) {
         return <Navigate to="/dashboard" replace/>;
     }
 
