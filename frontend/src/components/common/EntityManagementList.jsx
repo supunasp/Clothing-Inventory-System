@@ -4,6 +4,8 @@ import ConfirmationModal from "./ConfirmationModal";
 import Pagination from "./Pagination";
 import RowMenu from "./RowMenu";
 
+const DEFAULT_PAGE_SIZE = 5;
+
 const CONFIG = {
     category: {
         label: "Category",
@@ -26,7 +28,7 @@ const CONFIG = {
 const EntityManagementList = ({
     type,
     reloadKey = 0,
-    pageSize = 5,
+    pageSize = DEFAULT_PAGE_SIZE,
     addLabel,
     onAddClick,
     onChange,

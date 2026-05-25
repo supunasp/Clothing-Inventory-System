@@ -12,20 +12,25 @@ import UserManagement from "./pages/UserManagement";
 import InventoryAuditList from "./pages/InventoryAuditList";
 import AppLayout from './components/layout/AppLayout';
 import {useAuth} from './context/AuthContext';
+import {ROLE_ADMIN} from './constants';
 
-const ProtectedRoute = ({children}) => {
+const ProtectedRoute = ({children, adminOnly = false}) => {
     const {user} = useAuth();
 
     if (!user) {
         return <Navigate to="/login" replace/>;
     }
 
+    if (adminOnly && user.role !== ROLE_ADMIN) {
+        return <Navigate to="/dashboard" replace/>;
+    }
+
     return children;
 };
 
-const ProtectedLayout = ({children}) => {
+const ProtectedLayout = ({children, adminOnly = false}) => {
     return (
-        <ProtectedRoute>
+        <ProtectedRoute adminOnly={adminOnly}>
             <AppLayout>
                 {children}
             </AppLayout>
@@ -86,7 +91,7 @@ function App() {
                 <Route
                     path="/admin/categories"
                     element={
-                        <ProtectedLayout>
+                        <ProtectedLayout adminOnly>
                             <AddCategory/>
                         </ProtectedLayout>
                     }
@@ -95,7 +100,7 @@ function App() {
                 <Route
                     path="/admin/brands"
                     element={
-                        <ProtectedLayout>
+                        <ProtectedLayout adminOnly>
                             <AddBrand/>
                         </ProtectedLayout>
                     }
@@ -104,7 +109,7 @@ function App() {
                 <Route
                     path="/admin/users"
                     element={
-                        <ProtectedLayout>
+                        <ProtectedLayout adminOnly>
                             <UserManagement/>
                         </ProtectedLayout>
                     }
@@ -113,7 +118,7 @@ function App() {
                 <Route
                     path="/admin/inventory"
                     element={
-                        <ProtectedLayout>
+                        <ProtectedLayout adminOnly>
                             <InventoryAuditList/>
                         </ProtectedLayout>
                     }

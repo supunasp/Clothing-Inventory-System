@@ -3,10 +3,19 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const {ROLE_STAFF} = require('../constants');
 const logger = require("../utils/logger");
+const {isPasswordValid, PASSWORD_RULES_MESSAGE} = require('../utils/passwordValidator');
 
 const registerUser = async (req, res) => {
     const {firstName, lastName, email, password} = req.body;
     try {
+        if (!firstName || !lastName || !email || !password) {
+            return res.status(400).json({message: 'First name, last name, email and password are required'});
+        }
+
+        if (!isPasswordValid(password)) {
+            return res.status(400).json({message: PASSWORD_RULES_MESSAGE});
+        }
+
         const userExists = await User.findOne({email});
         if (userExists) return res.status(400).json({message: 'User already exists'});
 
@@ -30,11 +39,18 @@ const loginUser = async (req, res) => {
     const {email, password} = req.body;
     try {
         const user = await User.findOne({email});
-        if (user && (await bcrypt.compare(password, user.password))) {
-            res.json(convertToUserResponse(user));
-        } else {
-            res.status(401).json({message: 'Invalid email or password'});
+
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return res.status(401).json({message: 'Invalid email or password'});
         }
+
+        if (user.active === false) {
+            return res.status(403).json({
+                message: 'Your account has been deactivated. Please contact an administrator.',
+            });
+        }
+
+        res.json(convertToUserResponse(user));
     } catch (error) {
         logger.error('Error logging in user:', error);
         res.status(500).json({message: error.message});

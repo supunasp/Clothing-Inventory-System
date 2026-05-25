@@ -6,8 +6,7 @@ import ConfirmationModal from "../components/common/ConfirmationModal";
 import Pagination from "../components/common/Pagination";
 import ProductFilters from "../components/common/ProductFilters";
 import useReferenceData from "../hooks/useReferenceData";
-
-const PAGE_SIZE = 10;
+import { PAGE_SIZE } from "../constants";
 
 const ProductDashboard = () => {
     const { user } = useAuth();

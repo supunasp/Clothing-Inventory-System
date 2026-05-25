@@ -1,6 +1,7 @@
 import { LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { ROLE_ADMIN } from "../../constants";
 
 const Header = () => {
     const { user, logout } = useAuth();
@@ -9,7 +10,7 @@ const Header = () => {
     const fullName =
         [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Staff User";
 
-    const roleLabel = user?.role === "admin" ? "Admin" : "Staff";
+    const roleLabel = user?.role === ROLE_ADMIN ? "Admin" : "Staff";
 
     return (
         <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-end px-8">
