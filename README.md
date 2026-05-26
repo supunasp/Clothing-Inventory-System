@@ -74,8 +74,7 @@ release-and-deploy pipeline.
 │       ├── pages/            Login, Register, Dashboard, admin pages, etc.
 │       └── App.js            Routes + role-protected layouts
 ├── .github/workflows/
-│   ├── ci.yml                Test backend + build frontend on PR/push
-│   └── release-and-deploy.yml Tag patch release + deploy to EC2
+│   └── pipeline.yml          Test, build, release, and deploy in one workflow
 └── package.json              Top-level scripts (concurrently runs both)
 ```
 
@@ -135,40 +134,79 @@ Tests use `mongodb-memory-server`, so no external Mongo is required.
 All endpoints below are prefixed with `/api`. Routes marked **(admin)** require
 an admin JWT; all others require any authenticated user unless noted.
 
-| Method | Path                              | Purpose                                  |
-| ------ | --------------------------------- | ---------------------------------------- |
-| GET    | `/health`                         | Liveness + current version (public)      |
-| POST   | `/auth/register`                  | Create a new staff account (public)      |
-| POST   | `/auth/login`                     | Issue a JWT (public)                     |
-| GET    | `/auth/profile`                   | Get current user                         |
-| PUT    | `/auth/profile`                   | Update current user                      |
-| GET    | `/categories`                     | List categories                          |
-| POST   | `/categories`                     | Create category **(admin)**              |
-| PUT    | `/categories/:categoryId`         | Update category **(admin)**              |
-| DELETE | `/categories/:categoryId`         | Delete category **(admin)**              |
-| GET    | `/brands`                         | List brands                              |
-| POST   | `/brands`                         | Create brand **(admin)**                 |
-| PUT    | `/brands/:brandId`                | Update brand **(admin)**                 |
-| DELETE | `/brands/:brandId`                | Delete brand **(admin)**                 |
-| GET    | `/products`                       | List products                            |
-| POST   | `/products`                       | Create product                           |
-| GET    | `/products/:productId`            | Get product                              |
-| PUT    | `/products/:productId`            | Update product                           |
-| PATCH  | `/products/:productId/status`     | Activate/deactivate product **(admin)**  |
-| DELETE | `/products/:productId`            | Delete product                           |
-| GET    | `/products/variants`              | List variants                            |
-| POST   | `/products/variants`              | Create variant                           |
-| GET    | `/products/variants/:sku`         | Get variant                              |
-| PUT    | `/products/variants/:sku`         | Update variant                           |
-| POST   | `/products/variants/:sku/inventory` | Adjust stock (logs an audit entry)     |
-| DELETE | `/products/variants/:sku`         | Delete variant                           |
-| GET    | `/inventory-audits`               | List audit entries **(admin)**           |
-| GET    | `/admin/analytics`                | Dashboard analytics **(admin)**          |
-| GET    | `/admin/low-stock`                | Low-stock variants **(admin)**           |
-| GET    | `/admin/users`                    | List users **(admin)**                   |
-| PUT    | `/admin/users/:id/status`         | Activate/deactivate user **(admin)**     |
-| PUT    | `/admin/users/:id/role`           | Change user role **(admin)**             |
-| DELETE | `/admin/users/:id`                | Delete user **(admin)**                  |
+### System
+
+| Method | Path       | Purpose                              |
+| ------ | ---------- | ------------------------------------ |
+| GET    | `/health`  | Liveness + current version (public)  |
+
+### Auth — `/auth`
+
+| Method | Path        | Purpose                              |
+| ------ | ----------- | ------------------------------------ |
+| POST   | `/register` | Create a new staff account (public)  |
+| POST   | `/login`    | Issue a JWT (public)                 |
+| GET    | `/profile`  | Get current user                     |
+| PUT    | `/profile`  | Update current user                  |
+
+### Categories — `/categories`
+
+| Method | Path            | Purpose                       |
+| ------ | --------------- | ----------------------------- |
+| GET    | `/`             | List categories               |
+| POST   | `/`             | Create category **(admin)**   |
+| GET    | `/:categoryId`  | Get category                  |
+| PUT    | `/:categoryId`  | Update category **(admin)**   |
+| DELETE | `/:categoryId`  | Delete category **(admin)**   |
+
+### Brands — `/brands`
+
+| Method | Path         | Purpose                    |
+| ------ | ------------ | -------------------------- |
+| GET    | `/`          | List brands                |
+| POST   | `/`          | Create brand **(admin)**   |
+| GET    | `/:brandId`  | Get brand                  |
+| PUT    | `/:brandId`  | Update brand **(admin)**   |
+| DELETE | `/:brandId`  | Delete brand **(admin)**   |
+
+### Products — `/products`
+
+| Method | Path                  | Purpose                                  |
+| ------ | --------------------- | ---------------------------------------- |
+| GET    | `/`                   | List products                            |
+| POST   | `/`                   | Create product                           |
+| GET    | `/:productId`         | Get product                              |
+| PUT    | `/:productId`         | Update product                           |
+| PATCH  | `/:productId/status`  | Activate/deactivate product **(admin)**  |
+| DELETE | `/:productId`         | Delete product                           |
+
+### Product variants — `/products/variants`
+
+| Method | Path                | Purpose                              |
+| ------ | ------------------- | ------------------------------------ |
+| GET    | `/`                 | List variants                        |
+| POST   | `/`                 | Create variant                       |
+| GET    | `/:sku`             | Get variant                          |
+| PUT    | `/:sku`             | Update variant                       |
+| POST   | `/:sku/inventory`   | Adjust stock (logs an audit entry)   |
+| DELETE | `/:sku`             | Delete variant                       |
+
+### Inventory audits — `/inventory-audits` (admin)
+
+| Method | Path  | Purpose             |
+| ------ | ----- | ------------------- |
+| GET    | `/`   | List audit entries  |
+
+### Admin — `/admin` (admin)
+
+| Method | Path                  | Purpose                       |
+| ------ | --------------------- | ----------------------------- |
+| GET    | `/analytics`          | Dashboard analytics           |
+| GET    | `/low-stock`          | Low-stock variants            |
+| GET    | `/users`              | List users                    |
+| PUT    | `/users/:id/status`   | Activate/deactivate user      |
+| PUT    | `/users/:id/role`     | Change user role              |
+| DELETE | `/users/:id`          | Delete user                   |
 
 ---
 
@@ -185,19 +223,37 @@ an admin JWT; all others require any authenticated user unless noted.
 
 ## CI/CD
 
-- **`.github/workflows/ci.yml`** — runs on every push and PR to `main`. Installs
-  and tests the backend, installs and builds the frontend.
-- **`.github/workflows/release-and-deploy.yml`** — runs on push to `main`
-  (skipping its own release commits):
-  1. Re-runs backend tests.
-  2. Bumps the root `package.json` patch version and pushes a `vX.Y.Z` tag.
-  3. Deploys to EC2 via a self-hosted runner — checks out the new tag, installs
-     production deps, symlinks `BACKEND_ENV_FILE` as `.env`, and reloads the
-     `clothing-inventory-backend` `pm2` process.
+A single workflow — **`.github/workflows/pipeline.yml`** — covers the full
+lifecycle. Jobs:
 
-The repo variable `BACKEND_ENV_FILE` must point to the absolute path of the
-`.env` file on the EC2 host (kept outside the workspace because
-`actions/checkout` runs `git clean -ffdx`).
+| Job              | Pull request to `main` | Push to `main`                                      |
+| ---------------- | ---------------------- | --------------------------------------------------- |
+| `backend-test`   | ✅ runs                | ✅ runs                                              |
+| `frontend-build` | ✅ runs                | ✅ runs                                              |
+| `release`        | skipped                | ✅ after both above pass — `npm version patch` + tag |
+| `deploy-test`    | skipped                | ✅ after `release` — **gated by manual approval**    |
+
+The workflow skips its own `chore(release):` commits to avoid recursion. The
+frontend is deployed separately by **AWS Amplify**; this pipeline only ships the
+backend.
+
+### Manual approval gate
+
+`deploy-test` targets a GitHub **Environment** named `test`. To make the
+approval prompt fire, create that environment once in the repo:
+
+1. **Settings → Environments → New environment → `test`**
+2. Tick **Required reviewers** and add the approvers
+3. *(Recommended)* Move `BACKEND_ENV_FILE` to environment-level variables on `test`
+
+Without this setup the job runs without gating.
+
+### Deploy details
+
+`deploy-test` runs on a self-hosted runner on the EC2 host. It checks out the
+new release tag, installs prod deps, symlinks `$BACKEND_ENV_FILE` as `.env`
+(kept outside the workspace because `actions/checkout` runs `git clean -ffdx`),
+and reloads the `clothing-inventory-backend` `pm2` process.
 
 ---
 
