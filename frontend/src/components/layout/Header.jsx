@@ -1,16 +1,16 @@
-import { LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import { ROLE_ADMIN } from "../../constants";
+import {LogOut} from "lucide-react";
+import {useNavigate} from "react-router-dom";
+import {useAuth} from "../../context/AuthContext";
+import {ROLE_ADMIN} from "../../constants";
 
 const Header = () => {
-    const { user, logout } = useAuth();
+    const {user, logout} = useAuth();
     const navigate = useNavigate();
 
     const fullName =
-        [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Staff User";
+        [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "- -";
 
-    const roleLabel = user?.role === ROLE_ADMIN ? "Admin" : "Staff";
+    const roleLabel = user?.role === ROLE_ADMIN ? "Admin User" : "Staff User";
 
     return (
         <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-end px-8">
@@ -22,18 +22,19 @@ const Header = () => {
                     title="View profile"
                     aria-label="View profile"
                 >
-                    <span className="h-9 w-9 rounded-full bg-yellow-100 flex items-center justify-center text-base font-medium text-gray-900">
+                    <span
+                        className="h-9 w-9 rounded-full bg-yellow-100 flex items-center justify-center text-base font-medium text-gray-900">
                         {fullName.charAt(0).toUpperCase()}
                     </span>
 
-                    <span className="h-8 w-px bg-gray-200" />
+                    <span className="h-8 w-px bg-gray-200"/>
 
                     <span className="text-base font-medium text-gray-900">
                         {roleLabel}
                     </span>
                 </button>
 
-                <span className="h-8 w-px bg-gray-200" />
+                <span className="h-8 w-px bg-gray-200"/>
 
                 <button
                     type="button"
@@ -42,7 +43,7 @@ const Header = () => {
                     title="Logout"
                     aria-label="Logout"
                 >
-                    <LogOut size={26} strokeWidth={1.8} />
+                    <LogOut size={26} strokeWidth={1.8}/>
                 </button>
             </div>
         </header>
