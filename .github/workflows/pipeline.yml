@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   backend-build:
-    name: Backend Build & Test
+    name: Backend build & test
     # Skip the bot's release commit so the version-bump push doesn't recurse.
     if: "github.event_name == 'pull_request' || !contains(github.event.head_commit.message, 'chore(release):')"
     runs-on: ubuntu-latest
@@ -42,7 +42,7 @@ jobs:
           JWT_SECRET: ci-test-secret
 
   frontend-build:
-    name: Frontend Build & Test
+    name: Frontend build & test
     if: "github.event_name == 'pull_request' || !contains(github.event.head_commit.message, 'chore(release):')"
     runs-on: ubuntu-latest
 
