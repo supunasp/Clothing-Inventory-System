@@ -161,9 +161,9 @@ jobs:
         working-directory: frontend
         env:
           CI: 'false'
-          # Same-origin call: nginx proxies /api/* on this EC2 to the backend
-          # process on localhost:5001, so the bundle uses a relative base URL.
-          REACT_APP_API_URL: /api
+          # Same-origin: baseURL is just the origin ("/"). Each route call
+          # already includes the /api/ prefix, which nginx proxies to :5001.
+          REACT_APP_API_URL: /
         run: npm run build
 
       - name: Reload frontend with pm2
