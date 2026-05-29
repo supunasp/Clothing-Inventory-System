@@ -74,7 +74,7 @@ jobs:
           CI: 'false'
 
   release:
-    name: Bump version and tag
+    name: Bump version & tag
     needs: [backend-build, frontend-build]
     # Release only on direct pushes to main, never on PRs or the release commit itself.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !contains(github.event.head_commit.message, 'chore(release):')
