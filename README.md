@@ -28,11 +28,14 @@ release-and-deploy pipeline.
 - Tailwind CSS 3
 - Axios for HTTP, `lucide-react` for icons
 - Create React App (`react-scripts` 5)
+- Jest + React Testing Library for unit/component tests
 
 **DevOps**
 
 - GitHub Actions for CI (tests + build) and release/deploy
-- Self-hosted runner on EC2, `pm2` for the backend process
+- Self-hosted runner on EC2, `pm2` runs both `clothing-inventory-backend` (Node) and `clothing-inventory-frontend` (`pm2 serve`)
+- Nginx fronts the EC2 — `/` → frontend on `:3000`, `/api/*` → backend on `:5001` (same-origin, no CORS)
+- Backend `.env` is written each deploy from GitHub Environment secrets (`MONGO_URI`, `JWT_SECRET`, `PORT`)
 - Conventional version bumps via `npm version patch` on every push to `main`
 
 ---
@@ -121,11 +124,18 @@ npm start
 ### Test
 
 ```bash
+# Backend (Mocha + in-memory Mongo)
 cd backend
 npm test
+
+# Frontend (Jest + React Testing Library)
+cd frontend
+npm test -- --watchAll=false
 ```
 
-Tests use `mongodb-memory-server`, so no external Mongo is required.
+Backend tests use `mongodb-memory-server`, so no external Mongo is required.
+Frontend tests mock `axiosConfig` / react-router and exercise auth, common
+components, CRUD forms, and admin pages.
 
 ---
 
@@ -226,34 +236,42 @@ an admin JWT; all others require any authenticated user unless noted.
 A single workflow — **`.github/workflows/pipeline.yml`** — covers the full
 lifecycle. Jobs:
 
-| Job              | Pull request to `main` | Push to `main`                                      |
-| ---------------- | ---------------------- | --------------------------------------------------- |
-| `backend-test`   | ✅ runs                | ✅ runs                                              |
-| `frontend-build` | ✅ runs                | ✅ runs                                              |
-| `release`        | skipped                | ✅ after both above pass — `npm version patch` + tag |
-| `deploy-test`    | skipped                | ✅ after `release` — **gated by manual approval**    |
+| Job              | Pull request to `main` | Push to `main`                                           |
+| ---------------- | ---------------------- | -------------------------------------------------------- |
+| `backend-test`   | ✅ runs                | ✅ runs                                                   |
+| `frontend-build` | ✅ runs (tests + build)| ✅ runs (tests + build)                                   |
+| `release`        | skipped                | ✅ after both above pass — `npm version patch` + tag      |
+| `deploy-test`    | skipped                | ✅ after `release` — deploys backend **and** frontend on EC2, **gated by manual approval** |
 
-The workflow skips its own `chore(release):` commits to avoid recursion. The
-frontend is deployed separately by **AWS Amplify**; this pipeline only ships the
-backend.
+The workflow skips its own `chore(release):` commits to avoid recursion. A
+single deploy job is used for both backend and frontend so the two checkouts
+don't `git clean -ffdx` each other's `node_modules`.
 
 ### Manual approval gate
 
 `deploy-test` targets a GitHub **Environment** named `test`. To make the
-approval prompt fire, create that environment once in the repo:
+approval prompt fire and supply runtime secrets, set the environment up once:
 
 1. **Settings → Environments → New environment → `test`**
 2. Tick **Required reviewers** and add the approvers
-3. *(Recommended)* Move `BACKEND_ENV_FILE` to environment-level variables on `test`
+3. Add **environment secrets**: `MONGO_URI`, `JWT_SECRET`, `PORT`
 
-Without this setup the job runs without gating.
+Without the reviewers configured, the job runs without gating. Without the
+secrets, `backend/.env` will be written empty and the backend will fail to
+connect to Mongo.
 
 ### Deploy details
 
-`deploy-test` runs on a self-hosted runner on the EC2 host. It checks out the
-new release tag, installs prod deps, symlinks `$BACKEND_ENV_FILE` as `.env`
-(kept outside the workspace because `actions/checkout` runs `git clean -ffdx`),
-and reloads the `clothing-inventory-backend` `pm2` process.
+`deploy-test` runs on a self-hosted runner on the EC2 host. In a single job it:
+
+1. Checks out the new release tag.
+2. Installs backend prod deps and writes `backend/.env` from `${{ secrets.MONGO_URI }}`, `${{ secrets.JWT_SECRET }}`, `${{ secrets.PORT }}` (with `umask 077`).
+3. Reloads the `clothing-inventory-backend` `pm2` process — backend re-reads `.env` on restart.
+4. Installs frontend deps, builds with `REACT_APP_API_URL=/` so the bundle uses relative `/api/*` paths.
+5. Reloads the `clothing-inventory-frontend` `pm2 serve` process pointing at `frontend/build`.
+
+Nginx (on the EC2) proxies `/api/*` to the backend and `/` to the frontend, so
+the browser only ever talks to a single origin.
 
 ---
 
@@ -272,4 +290,4 @@ Backend (`backend/package.json`):
 Frontend (`frontend/package.json`):
 - `npm start` — CRA dev server
 - `npm run build` — production build
-- `npm test` — CRA test runner
+- `npm test` — CRA test runner (use `npm test -- --watchAll=false` for one-shot CI mode)
